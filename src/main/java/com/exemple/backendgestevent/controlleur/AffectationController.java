@@ -7,7 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Optional;
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -18,18 +18,26 @@ public class AffectationController {
     @Autowired
     private AffectationService affectationService;
 
-    // Créer une affectation
+    // Créer une affectation avec l'événement et la liste de personnels
     @PostMapping("/create")
     public ResponseEntity<Affectation> createAffectation(@RequestBody Affectation affectation) {
-        Affectation createdAffectation = affectationService.createAffectation(affectation);
+        // Vérifier si l'événement et la liste des personnels sont bien fournis
+        if (affectation.getEventId() == null || affectation.getPersonnel() == null ) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+
+        // Appeler le service pour créer l'affectation
+        Affectation createdAffectation = affectationService.createAffectation(affectation, affectation.getPersonnel());
+
         return new ResponseEntity<>(createdAffectation, HttpStatus.CREATED);
     }
 
     // Obtenir une affectation par ID
     @GetMapping("/{id}")
-    public ResponseEntity<Optional<Affectation>> getAffectationById(@PathVariable UUID id) {
-        Optional<Affectation> affectation = affectationService.getAffectationById(id);
-        if (affectation.isPresent()) {
+    public ResponseEntity<Affectation> getAffectationById(@PathVariable UUID id) {
+        Affectation affectation = affectationService.getAffectationById(id).orElse(null);
+
+        if (affectation != null) {
             return new ResponseEntity<>(affectation, HttpStatus.OK);
         } else {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -42,4 +50,13 @@ public class AffectationController {
         Iterable<Affectation> affectations = affectationService.getAllAffectations();
         return new ResponseEntity<>(affectations, HttpStatus.OK);
     }
+    @GetMapping("/event/{eventId}")
+    public ResponseEntity<Affectation> getAffectationByEventId(@PathVariable UUID eventId) {
+        Affectation affectations = affectationService.getAffectationByEventId(eventId);
+        if (affectations== null) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);  // Return 404 if no affectations found
+        }
+        return new ResponseEntity<>(affectations, HttpStatus.OK);  // Return 200 with list of affectations
+    }
+
 }

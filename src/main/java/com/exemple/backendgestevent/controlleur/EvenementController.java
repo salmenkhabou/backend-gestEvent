@@ -1,12 +1,15 @@
 package com.exemple.backendgestevent.controlleur;
 
+import com.exemple.backendgestevent.entity.Affectation;
 import com.exemple.backendgestevent.entity.Evenement;
+import com.exemple.backendgestevent.entity.Personnel;
 import com.exemple.backendgestevent.services.EvenementService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -17,11 +20,17 @@ public class EvenementController {
     @Autowired
     private EvenementService evenementService;
 
-    // Create event
+    // Create event with personnel assignments
     @PostMapping("/create")
-    public ResponseEntity<Evenement> createEvent(@RequestBody Evenement evenement) {
-        Evenement createdEvenement = evenementService.createEvent(evenement);
-        return new ResponseEntity<>(createdEvenement, HttpStatus.CREATED);
+    public ResponseEntity<Evenement> createEvent(@RequestBody Affectation affectation) {
+        Evenement evenement = affectation.getEventId();
+        Personnel personnels = affectation.getPersonnel();
+
+        // Create the event and assign personnel
+        Evenement createdEvent = evenementService.createEvent(evenement, personnels);
+
+        // Return created event in the response
+        return new ResponseEntity<>(createdEvent, HttpStatus.CREATED);
     }
 
     // Update event
@@ -63,10 +72,14 @@ public class EvenementController {
         Iterable<Evenement> events = evenementService.getAllEvents();
         return new ResponseEntity<>(events, HttpStatus.OK);
     }
+
+    // Get upcoming events
     @GetMapping("/upcoming")
     public ResponseEntity<?> getUpcomingEvents() {
         return ResponseEntity.ok(evenementService.getUpcomingEvents());
     }
+
+    // Get event statistics
     @GetMapping("/statistics/{eventId}")
     public ResponseEntity<?> getEventStatistics(@PathVariable UUID eventId) {
         String report = evenementService.generateEventStatistics(eventId);

@@ -1,7 +1,10 @@
 package com.exemple.backendgestevent.services;
 
+import com.exemple.backendgestevent.entity.Affectation;
 import com.exemple.backendgestevent.entity.Evenement;
 import com.exemple.backendgestevent.entity.Participant;
+import com.exemple.backendgestevent.entity.Personnel;
+import com.exemple.backendgestevent.repository.AffectationRepository;
 import com.exemple.backendgestevent.repository.EvenementRepository;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -21,15 +24,37 @@ public class EvenementService {
 
     @Autowired
     private EvenementRepository evenementRepository;
+    @Autowired
+    private AffectationRepository affectationRepository;
 
     @Autowired
     private ParticipantService participantService;
+    @Autowired
+    private AffectationService affectationService;
 
-    // Create event
-    public Evenement createEvent(Evenement evenement) {
-        logger.info("Création de l'événement : {}", evenement.getTitle());
+    // Créer un événement et affecter les personnels
+//    public Evenement createEvent(Evenement evenement, List<Personnel> personnels) {
+//        // Sauvegarde de l'événement
+//        Evenement createdEvent = evenementRepository.save(evenement);
+//
+//        // Création des affectations pour chaque personnel
+//        for (Personnel personnel : personnels) {
+//            Affectation affectation = new Affectation(createdEvent, (List<Personnel>) personnel);  // Créer une affectation
+//            affectationService.createAffectation(affectation, (List<Personnel>) personnel);  // Sauvegarder l'affectation
+//        }
+//
+//        return createdEvent;
+//    }
+    public Evenement createEvent(Evenement evenement, Personnel personnels) {
+        // Sauvegarde de l'événement
+        evenement.setId(UUID.randomUUID());
         Evenement createdEvent = evenementRepository.save(evenement);
-        logger.info("Événement créé avec succès : {}", createdEvent.getTitle());
+
+        // Création des affectations pour chaque personnel
+            Affectation affectation = new Affectation(createdEvent, personnels);  // Créer une affectation
+            affectationService.createAffectation(affectation, personnels);  // Sauvegarder l'affectation
+
+
         return createdEvent;
     }
 
